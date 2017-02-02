@@ -395,6 +395,46 @@ need_a_bosh() {
 	fi
 }
 
+# args string [string_name] ; returns non-zero if issue was found 
+strip_quotes() {
+    local arg="$1"
+    local string_type=${2:-string}
+    local msg=""
+    case "${#1}" in 
+        0) ;;
+        1) [[ "${arg}" = [\"\'] ]] && {
+            msg="unbalanced"
+           }
+           ;;
+        *) 
+            local first=${1:0:1} 
+            local last=${1: -1:1} 
+            arg="${arg%[\"\']}"
+            arg="${arg#[\"\']}"
+            if (( ${#arg} != ${#1} && (${#arg}) + 2 != ${#1} ))
+            then
+                msg="unbalanced"
+            elif [[ "${first}" = [\"\'] && "${last}" = [\"\'] && 
+                    "${first}" != "${last}" ]]
+            then
+                msg="mismatched"
+            fi
+            ;;
+
+    esac
+    case "${msg}" in
+        unbalanced) 
+            echo >&2 "The ${string_type} ${1} has unbalanced quotes."
+            ;;
+        mismatched)
+            echo >&2 "The ${string_type} ${1} has mismatched quotes."
+            ;;
+    esac
+
+    echo "${arg}"
+    [[ -z "${msg}" ]]
+}
+
 
 ####################################################
 # checks and validating functions
